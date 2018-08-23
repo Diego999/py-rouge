@@ -1,0 +1,107 @@
+from unittest import TestCase
+from tests.utils import *
+import os
+import logging
+logging.disable(logging.CRITICAL)
+
+
+class RougeNTest(TestCase):
+    def setUp(self):
+        self.rouge_dir = os.path.abspath('ROUGE-1.5.5')
+        self.epsilon_ngrams_count_and_hits = 1e-5
+        self.epsilon_avg_with_resampling = 2e-5 # We have to compare with a value higher than 1e-5 as the resampling might affect the precision of the true mean
+
+    def test_apply_avg(self):
+        rouge_dir = self.rouge_dir
+        N = 4
+        stemming = True
+        alpha = 0.5
+        limit_length = True
+        length_limit_type = 'words'
+        length_limit = 100
+
+        apply_avg = True
+        apply_best = False
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+    def test_apply_best(self):
+        rouge_dir = self.rouge_dir
+        N = 4
+        stemming = True
+        alpha = 0.5
+        limit_length = True
+        length_limit_type = 'words'
+        length_limit = 100
+
+        apply_avg = False
+        apply_best = True
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+    def test_truncate_words_bytes(self):
+        rouge_dir = self.rouge_dir
+        N = 4
+        apply_avg = True
+        apply_best = False
+        stemming = True
+        alpha = 0.5
+
+        for length_limit_type in ['words', 'bytes']:
+            limit_length = True
+            length_limit_type = length_limit_type
+            length_limit = 0 # No Length limit
+            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+            for assert_result, message in all_asserts:
+                self.assertTrue(assert_result, message)
+
+            limit_length = True
+            length_limit_type = length_limit_type
+            length_limit = 1
+            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+            for assert_result, message in all_asserts:
+                self.assertTrue(assert_result, message)
+
+            limit_length = True
+            length_limit_type = length_limit_type
+            length_limit = 1000
+            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+            for assert_result, message in all_asserts:
+                self.assertTrue(assert_result, message)
+
+    def test_stemming(self):
+        rouge_dir = self.rouge_dir
+        N = 4
+        alpha = 0.5
+        limit_length = True
+        length_limit_type = 'words'
+        length_limit = 100
+        apply_avg = False
+        apply_best = True
+
+        stemming = True
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        stemming = False
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+    def test_alpha(self):
+        rouge_dir = self.rouge_dir
+        N = 4
+        stemming = True
+        limit_length = True
+        length_limit_type = 'words'
+        length_limit = 100
+        apply_avg = False
+        apply_best = True
+
+        for alpha in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+            for assert_result, message in all_asserts:
+                self.assertTrue(assert_result, message)
