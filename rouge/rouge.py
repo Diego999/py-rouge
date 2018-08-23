@@ -37,13 +37,13 @@ class Rouge:
           metrics: What ROUGE score to compute. Available: ROUGE-N. Default: ROUGE-N
           max_n: N-grams for ROUGE-N if specify. Default:1
           limit_length: If the summaries must be truncated. Defaut:True
-          length_limit: Number of the truncation where the unit is express int length_limit_Type. Default:665 (bytes) (0: unlimited)
+          length_limit: Number of the truncation where the unit is express int length_limit_Type. Default:665 (bytes)
           length_limit_type: Unit of length_limit. Available: words, bytes. Default: 'bytes'
           apply_avg: If we should average the score of multiple samples. Default: True. If apply_Avg & apply_best = False, then each ROUGE scores are independant
           apply_best: Take the best instead of the average. Default: False, then each ROUGE scores are independant
-          steemming: Apply stemming to summaries. Default: True
+          stemming: Apply stemming to summaries. Default: True
           alpha: Alpha use to compute f1 score: P*R/((1-a)*P + a*R). Default:0.5
-          ensure_compatibility: Use same stemmer and special "hacks" to product same results as in the official perl script (besides the number of sampling if not high enough)
+          ensure_compatibility: Use same stemmer and special "hacks" to product same results as in the official perl script (besides the number of sampling if not high enough). Default:True
 
         Raises:
           ValueError: raises exception if metric is not among AVAILABLE_METRICS
@@ -298,10 +298,8 @@ class Rouge:
         Returns:
           Return precision, recall and f1 score between all hypothesis and references
         """
-        if self.apply_avg:
+        if self.apply_avg or self.apply_best:
             scores = {metric: {stat:0.0 for stat in Rouge.STATS} for metric in self.metrics}
-        elif self.apply_best:
-            scores = {metric: {stat: [] for stat in Rouge.STATS} for metric in self.metrics}
         else:
             scores = {metric: [{stat:[] for stat in Rouge.STATS} for _ in range(len(all_hypothesis))] for metric in self.metrics}
 
@@ -325,13 +323,13 @@ class Rouge:
                     n = int(suffix)
 
                 if n > 0:
-                    total_hypothesis_ngrams_count = 0
-                    total_reference_ngrams_count = 0
-                    total_ngrams_overlapping_count = 0
-
                     # Aggregate
                     if self.apply_avg:
-                        # AVG
+                        # average model
+                        total_hypothesis_ngrams_count = 0
+                        total_reference_ngrams_count = 0
+                        total_ngrams_overlapping_count = 0
+
                         for reference in references:
                             hypothesis_count, reference_count, overlapping_ngrams = Rouge._compute_ngrams(hypothesis, reference, n)
                             total_hypothesis_ngrams_count += hypothesis_count
@@ -343,7 +341,7 @@ class Rouge:
                         for stat in Rouge.STATS:
                             scores[metric][stat] += score[stat]
                     else:
-                        # Best sample
+                        # Best model
                         if self.apply_best:
                             best_current_score = None
                             for reference in references:
@@ -351,9 +349,11 @@ class Rouge:
                                 score = Rouge._compute_p_r_f_score(hypothesis_count, reference_count, overlapping_ngrams, self.alpha)
                                 if best_current_score is None or score['r'] > best_current_score['r']:
                                     best_current_score = score
+
                             for stat in Rouge.STATS:
-                                scores[metric][stat].append(best_current_score[stat])
-                        else: # Keep all
+                                scores[metric][stat] += best_current_score[stat]
+                        # Keep all
+                        else:
                             for reference in references:
                                 hypothesis_count, reference_count, overlapping_ngrams = Rouge._compute_ngrams(hypothesis, reference, n)
                                 score = Rouge._compute_p_r_f_score(hypothesis_count, reference_count, overlapping_ngrams, self.alpha)
@@ -361,15 +361,10 @@ class Rouge:
                                     scores[metric][sample_id][stat].append(score)
 
         # Compute final score with the average or the the max
-        if self.apply_avg and len(all_hypothesis) > 1:
+        if (self.apply_avg or self.apply_best) and len(all_hypothesis) > 1:
             for metric in self.metrics:
                 for stat in Rouge.STATS:
                     scores[metric][stat] /= len(all_hypothesis)
-        elif self.apply_best: # Has to take the best among a list, even if the list has only one element
-            for metric in self.metrics:
-                idx_best = list(sorted([(i, val) for i, val in enumerate(scores[metric]['r'])], key=lambda x:x[1], reverse=True))[0][0]
-                for stat in Rouge.STATS:
-                    scores[metric][stat] = scores[metric][stat][idx_best]
 
         return scores
 
