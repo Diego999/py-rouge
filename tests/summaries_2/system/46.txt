@@ -1,0 +1,3 @@
+In a letter to the Justice Department, Netscape said that Microsoft was using its dominance in personal-computer operating systems to force or persuade computer makers to favor Microsoft's browser, used to explore the World Wide Web, over the one marketed by Netscape.
+For example, the government has added the contention that Microsoft pressured Intel Corp., the big microchip maker and a close partner of Microsoft, to curb its development efforts in multimedia and Internet software because they might conflict with Microsoft's plans.
+``After we agreed to its Internet Explorer browser, Microsoft allowed us to be bundled on the Windows desktop,'' Case said.
