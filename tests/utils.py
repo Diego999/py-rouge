@@ -139,7 +139,7 @@ def get_rouge_args(rouge_dir, N, stemming, apply_avg, apply_best, alpha, length_
     rouge_args +=' -n {}'.format(N)
     if stemming:
         rouge_args +=' -m'
-    rouge_args +=' -x -c 95 -r 10000'
+    rouge_args +=' -x -c 95 -r 50000'
     rouge_args +=' -f {}'.format('A' if apply_avg else ('B' if apply_best else ''))
     rouge_args +=' -p {}'.format(alpha)
     rouge_args +=' -t 0'
@@ -203,14 +203,14 @@ def run_python_rouge_script(hyps, refs, N, stemming, apply_avg, apply_best, alph
 
 def run_a_single_t_est(rouge_dir, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit):
     results = {}
-    for test_folder in ['summaries_1']:#, 'summaries_2']:
+    for test_folder in ['summaries_1', 'summaries_2']:
         results[test_folder] = {}
         system_dir = os.path.join('./', test_folder, 'system')
         model_dir = os.path.join('./', test_folder, 'references')
 
         all_hyps, all_refs = get_peers_models(system_dir, model_dir)
 
-        for test_case in ['one_summary_document_multiple_refs']:#'['one_summary_sentence', 'one_summary_document_one_ref', 'one_summary_document_multiple_refs', 'all_summaries_all_refs', 'all_input_output']:
+        for test_case in ['one_summary_sentence', 'one_summary_document_one_ref', 'one_summary_document_multiple_refs', 'all_summaries_all_refs', 'all_input_output']:
             hyps, refs = get_hypothesis_references(test_case, all_hyps, all_refs)
 
             rouge_python_time, rouge_python_scores = run_python_rouge_script(hyps, refs, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)

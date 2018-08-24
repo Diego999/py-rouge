@@ -132,6 +132,20 @@ class Rouge:
         return nltk.word_tokenize(text, language)
 
     @staticmethod
+    def split_into_sentences(text, language='english'):
+        """
+        Split text into sentences, using specified language. Use PunktSentenceTokenizer
+
+        Args:
+          text: The string text to tokenize
+          language: Language of the text
+
+        Returns:
+          List of tokens of text
+        """
+        return nltk.sent_tokenize(text, language)
+
+    @staticmethod
     def stem_tokens(tokens):
         """
         Apply WordNetDB rules or Stem each token of tokens
@@ -378,22 +392,52 @@ class Rouge:
         Returns:
           Return the preprocessed summary (string)
         """
+        sentences = Rouge.split_into_sentences(summary)
+
         # Truncate
         if self.limit_length:
-            all_tokens = summary.split() # Counting as in the perls script
+            # By words
             if self.length_limit_type == 'words':
+                summary = ' '.join(sentences)
+                all_tokens = summary.split() # Counting as in the perls script
                 summary = ' '.join(all_tokens[:self.length_limit])
-            elif self.length_limit_type == 'bytes':
-                summary = summary[:self.length_limit]
 
-        # Preprocess. Hack: because official ROUGE script bring "cannot" as "cannot" and "can not" as "can not", we have to hack nltk tokenizer to not transform "cannot/can not" to "can not"
-        if self.ensure_compatibility:
-            tokens = self.tokenize_text(Rouge.KEEP_CANNOT_IN_ONE_WORD.sub('_cannot_', Rouge.REMOVE_CHAR_PATTERN.sub(' ', summary.lower().strip())))
-            stems = self.stem_tokens(tokens) # stemming in-place
-            preprocessed_summary = [Rouge.KEEP_CANNOT_IN_ONE_WORD_REVERSED.sub('cannot', ' '.join(stems))]
+            # By bytes
+            elif self.length_limit_type == 'bytes':
+                summary = ''
+                current_len = 0
+                for sentence in sentences:
+                    sentence = sentence.strip()
+                    sentence_len = len(sentence)
+
+                    if current_len + sentence_len < self.length_limit:
+                        if current_len != 0:
+                            summary += ' '
+                        summary += sentence
+                        current_len += sentence_len
+                    else:
+                        if current_len > 0:
+                            summary += ' '
+                        summary += sentence[:self.length_limit-current_len]
+                        break
         else:
-            tokens = self.tokenize_text(Rouge.REMOVE_CHAR_PATTERN.sub(' ', summary.lower().strip()))
-            stems = self.stem_tokens(tokens) # stemming in-place
-            preprocessed_summary = [' '.join(stems)]
+            summary = ' '.join(sentences)
+
+        summary = Rouge.REMOVE_CHAR_PATTERN.sub(' ', summary.lower()).strip()
+
+        # Preprocess. Hack: because official ROUGE script bring "cannot" as "cannot" and "can not" as "can not",
+        # we have to hack nltk tokenizer to not transform "cannot/can not" to "can not"
+        if self.ensure_compatibility:
+            tokens = self.tokenize_text(Rouge.KEEP_CANNOT_IN_ONE_WORD.sub('_cannot_', summary))
+        else:
+            tokens = self.tokenize_text(Rouge.REMOVE_CHAR_PATTERN.sub(' ', summary))
+
+        if self.stemming:
+            self.stem_tokens(tokens) # stemming in-place
+
+        if self.ensure_compatibility:
+            preprocessed_summary = [Rouge.KEEP_CANNOT_IN_ONE_WORD_REVERSED.sub('cannot', ' '.join(tokens))]
+        else:
+            preprocessed_summary = [' '.join(tokens)]
 
         return preprocessed_summary

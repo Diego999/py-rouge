@@ -41,35 +41,100 @@ class RougeNTest(TestCase):
         for assert_result, message in all_asserts:
             self.assertTrue(assert_result, message)
 
-    def test_truncate_words_bytes(self):
+    def test_truncate_words(self):
         rouge_dir = self.rouge_dir
         N = 4
         apply_avg = True
         apply_best = False
         stemming = True
         alpha = 0.5
+        length_limit_type = 'words'
 
-        for length_limit_type in ['words', 'bytes']:
-            limit_length = True
-            length_limit_type = length_limit_type
-            length_limit = 0 # No Length limit
-            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
-            for assert_result, message in all_asserts:
-                self.assertTrue(assert_result, message)
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 0 # Unlimited
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
 
-            limit_length = True
-            length_limit_type = length_limit_type
-            length_limit = 1
-            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
-            for assert_result, message in all_asserts:
-                self.assertTrue(assert_result, message)
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 1
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
 
-            limit_length = True
-            length_limit_type = length_limit_type
-            length_limit = 1000
-            all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
-            for assert_result, message in all_asserts:
-                self.assertTrue(assert_result, message)
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 10
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 100
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 300
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+    def test_truncate_bytes(self):
+        rouge_dir = self.rouge_dir
+        N = 4
+        apply_avg = True
+        apply_best = False
+        stemming = True
+        alpha = 0.5
+        length_limit_type = 'bytes'
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 0 # Unlimited
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 1
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 10
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 100
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 665
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 1000
+        all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
 
     def test_stemming(self):
         rouge_dir = self.rouge_dir
@@ -78,8 +143,8 @@ class RougeNTest(TestCase):
         limit_length = True
         length_limit_type = 'words'
         length_limit = 100
-        apply_avg = False
-        apply_best = True
+        apply_avg = True
+        apply_best = False
 
         stemming = True
         all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
@@ -98,10 +163,10 @@ class RougeNTest(TestCase):
         limit_length = True
         length_limit_type = 'words'
         length_limit = 100
-        apply_avg = False
-        apply_best = True
+        apply_avg = True
+        apply_best = False
 
-        for alpha in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+        for alpha in [0.0, 0.4, 0.8, 1.0]:
             all_asserts = run_a_single_t_est_on_all_files(N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
             for assert_result, message in all_asserts:
                 self.assertTrue(assert_result, message)
