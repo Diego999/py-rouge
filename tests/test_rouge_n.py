@@ -9,7 +9,7 @@ class RougeNTest(TestCase):
     def setUp(self):
         self.rouge_dir = os.path.abspath('ROUGE-1.5.5')
         self.epsilon_ngrams_count_and_hits = 1e-5
-        self.epsilon_avg_with_resampling = 2e-5 # We have to compare with a value higher than 1e-5 as the resampling might affect the precision of the true mean
+        self.epsilon_avg_with_resampling = 4e-5 # We have to compare with a value higher than 1e-5 as the resampling might affect the precision of the true mean (especially with small truncation)
 
     def test_apply_avg(self):
         rouge_dir = self.rouge_dir
