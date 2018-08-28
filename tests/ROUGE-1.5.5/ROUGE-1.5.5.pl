@@ -2098,7 +2098,8 @@ sub readText_LCS {
       my ($sLen);
       $sLen=length($s);
       if($tmpTextLen+$sLen<$byteLimit) {
-	push(@{$tokenizedText},$s);
+        $tmpTextLen+=$sLen;
+	  push(@{$tokenizedText},$s);
       }
       else {
 	push(@{$tokenizedText},substr($s,0,$byteLimit-$tmpTextLen));
