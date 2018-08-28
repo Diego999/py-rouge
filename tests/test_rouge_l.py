@@ -11,7 +11,7 @@ class RougeLTest(TestCase):
         self.N = 4
         self.metrics = ["rouge-l"]
         self.epsilon_ngrams_count_and_hits = 1e-5
-        self.epsilon_avg_with_resampling = 4e-5 # We have to compare with a value higher than 1e-5 as the resampling might affect the precision of the true mean (especially with small truncation)
+        self.epsilon_avg_with_resampling = 3e-5 # We have to compare with a value higher than 1e-5 as the resampling might affect the precision of the true mean (especially with small truncation)
 
     def test_apply_avg(self):
         stemming = True
@@ -45,6 +45,13 @@ class RougeLTest(TestCase):
         stemming = True
         alpha = 0.5
         length_limit_type = 'words'
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 0 # Unlimited
+        all_asserts = run_a_single_t_est_on_all_files_rouge_l(self.metrics, self.N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, self.rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
 
         limit_length = True
         length_limit_type = length_limit_type
@@ -83,7 +90,35 @@ class RougeLTest(TestCase):
 
         limit_length = True
         length_limit_type = length_limit_type
+        length_limit = 0 # Unlimited
+        all_asserts = run_a_single_t_est_on_all_files_rouge_l(self.metrics, self.N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, self.rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
         length_limit = 10
+        all_asserts = run_a_single_t_est_on_all_files_rouge_l(self.metrics, self.N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, self.rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 50
+        all_asserts = run_a_single_t_est_on_all_files_rouge_l(self.metrics, self.N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, self.rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 100
+        all_asserts = run_a_single_t_est_on_all_files_rouge_l(self.metrics, self.N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, self.rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
+        for assert_result, message in all_asserts:
+            self.assertTrue(assert_result, message)
+
+        limit_length = True
+        length_limit_type = length_limit_type
+        length_limit = 300
         all_asserts = run_a_single_t_est_on_all_files_rouge_l(self.metrics, self.N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, self.rouge_dir, stemming, self.epsilon_ngrams_count_and_hits, self.epsilon_avg_with_resampling)
         for assert_result, message in all_asserts:
             self.assertTrue(assert_result, message)

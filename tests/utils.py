@@ -238,7 +238,10 @@ def run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, a
 
         all_hyps, all_refs = get_peers_models(system_dir, model_dir)
 
-        for test_case in ['one_summary_sentence', 'one_summary_document_one_ref', 'one_summary_document_multiple_refs']:#, 'all_summaries_all_refs']:
+        test_cases = ['one_summary_sentence', 'one_summary_document_one_ref', 'one_summary_document_multiple_refs', 'all_summaries_all_refs']
+        if (length_limit_type == 'words' and 0 < length_limit < 300) or (length_limit_type == 'bytes' and 0 < length_limit < 1000):
+            test_cases.append('all_input_output')
+        for test_case in test_cases:
             hyps, refs = get_hypothesis_references(test_case, all_hyps, all_refs)
 
             rouge_python_time, rouge_python_scores = run_python_rouge_script(hyps, refs, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)
