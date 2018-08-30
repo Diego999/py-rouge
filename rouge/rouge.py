@@ -57,8 +57,8 @@ class Rouge:
         # Add all rouge-n metrics
         if self.max_n is not None:
             index_rouge_n = self.metrics.index('rouge-n')
-            self.metrics[index_rouge_n] = ['rouge-{}'.format(n) for n in range(1, self.max_n + 1)]
-            self.metrics = sum(self.metrics, [])
+            del self.metrics[index_rouge_n]
+            self.metrics += ['rouge-{}'.format(n) for n in range(1, self.max_n + 1)]
         self.metrics = set(self.metrics)
 
         self.limit_length = limit_length
