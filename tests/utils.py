@@ -13,7 +13,7 @@ def parse_rouge_for_results(output):
     Read the ROUGE scores from the official scripts
     """
     # ROUGE-N
-    pattern = regex.compile('^..ROUGE-(\d|L)\s+Average_(R|P|F):')
+    pattern = regex.compile('^..ROUGE-(\d|L|(W-\d\.\d*))\s+Average_(R|P|F):')
     parsed_output = [line for line in output.strip().split('\n') if pattern.match(line)]
 
     results = {}
@@ -21,6 +21,8 @@ def parse_rouge_for_results(output):
         split_output = line.split()
         assert len(split_output) == 8 # Average
         rouge_test = split_output[1]
+        if rouge_test.startswith('ROUGE-W'):
+            rouge_test = 'ROUGE-W'
         if rouge_test not in results:
             results[rouge_test] = {}
 
@@ -63,7 +65,7 @@ def parse_rouge_for_ngrams_counts(output):
         metric = 'ROUGE-L'
         metric_len = len(metric)
 
-        if len(parsed_output) > 1:  # ROUGE-N
+        if len(parsed_output) > 1:
             results = []
             for i, line in enumerate(parsed_output):
                 if i % 6 == 0:  # 6 entries per summary
@@ -77,11 +79,34 @@ def parse_rouge_for_ngrams_counts(output):
                     key, val = split_output[1], split_output[-1]
                     key = key[key.rfind('-')+1:]
                     results[-1][key] = val
+        else:
+            # ROUGE-W
+            pattern_ngrams = regex.compile('^total\s+ROUGE-W-\d\.\d*\s+')
+            pattern_score = regex.compile('^total\sROUGE-(\d|(W-\d\.\d*))-(R|P|F)')
+            pattern_metric = regex.compile('ROUGE-W-\d\.\d*')
+            parsed_output = [regex.sub(pattern_metric, 'ROUGE-W', line) for line in output.strip().split('\n') if pattern_ngrams.match(line) or pattern_score.match(line)]
+
+            metric = 'ROUGE-W'
+            metric_len = len(metric)
+
+            results = []
+            for i, line in enumerate(parsed_output):
+                if i % 6 == 0:  # 6 entries per summary
+                    results.append(collections.defaultdict(dict))
+                split_output = line.replace(':', '').split()
+                key = split_output[1]
+                if key == metric:  # count ngrams
+                    type_, val = split_output[2], split_output[-1]
+                    results[-1][key][type_] = val
+                elif len(key) == metric_len + 2:  # ROUGE-W-R
+                    key, val = split_output[1], split_output[-1]
+                    key = key[key.rfind('-') + 1:]
+                    results[-1][key] = val
 
     return results
 
 
-def setup_rouge_python(metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_type, length_limit):
+def setup_rouge_python(metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_type, length_limit, weight_factor):
     return rouge.Rouge(metrics=metrics,
                        max_n=N,
                        limit_length=limit_length,
@@ -90,6 +115,7 @@ def setup_rouge_python(metrics, N, stemming, apply_avg, apply_best, alpha, limit
                        apply_avg=apply_avg,
                        apply_best=apply_best,
                        alpha=alpha,
+                       weight_factor=weight_factor,
                        stemming=stemming)
 
 
@@ -159,12 +185,14 @@ def get_hypothesis_references(test_case, all_hyps, all_refs):
     return hyps, refs
 
 
-def get_rouge_args(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, length_limit_type, length_type, length_limit):
+def get_rouge_args(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, length_limit_type, length_type, length_limit, weight_factor=1.2):
     rouge_args = ' -e {}'.format(rouge_dir + '/data')
     if "rouge-n" in metrics:
         rouge_args +=' -n {}'.format(N)
     if "rouge-l" not in metrics:
         rouge_args += ' -x'
+    if "rouge-w" in metrics:
+        rouge_args += ' -w {}'.format(weight_factor)
     if stemming:
         rouge_args +=' -m'
     rouge_args +=' -c 95 -r 50000'
@@ -220,16 +248,16 @@ def run_perl_rouge_script(hyps, refs, rouge_dir, metrics, N, stemming, apply_avg
     return rouge_perl_time, rouge_perl_scores, rouge_perl_ngrams_count
 
 
-def run_python_rouge_script(hyps, refs, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit):
+def run_python_rouge_script(hyps, refs, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, weight_factor=1.0):
     rouge_python_time = time.time()
-    rouge_python = setup_rouge_python(metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)
+    rouge_python = setup_rouge_python(metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, weight_factor)
     rouge_python_scores = rouge_python.get_scores(hyps, refs)
     rouge_python_time = time.time() - rouge_python_time
 
     return rouge_python_time, rouge_python_scores
 
 
-def run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit):
+def run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, weight_factor=1.0, tmp_folder='/Users/diego/Github/py-rouge/tests/tmp'):
     results = {}
     for test_folder in ['summaries_1', 'summaries_2']:
         results[test_folder] = {}
@@ -244,8 +272,8 @@ def run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, a
         for test_case in test_cases:
             hyps, refs = get_hypothesis_references(test_case, all_hyps, all_refs)
 
-            rouge_python_time, rouge_python_scores = run_python_rouge_script(hyps, refs, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)
-            rouge_perl_time, rouge_perl_scores, rouge_perl_ngrams_count = run_perl_rouge_script(hyps, refs, rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)
+            rouge_python_time, rouge_python_scores = run_python_rouge_script(hyps, refs, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, weight_factor)
+            rouge_perl_time, rouge_perl_scores, rouge_perl_ngrams_count = run_perl_rouge_script(hyps, refs, rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, tmp_folder)
 
             results[test_folder][test_case] = {'python':{'time':rouge_python_time,
                                                          'scores':rouge_python_scores},
@@ -258,7 +286,7 @@ def run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, a
 
 
 def run_a_single_t_est_on_all_files_rouge_n(metrics, N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, epsilon_ngrams_count_and_hits, epsilon_avg_with_resampling):
-    results = run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)
+    results = run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, tmp_folder='/Users/diego/Github/py-rouge/tests/tmp_rouge_n')
 
     all_asserts = []
     for test_folder in results.keys():
@@ -298,7 +326,7 @@ def run_a_single_t_est_on_all_files_rouge_n(metrics, N, alpha, apply_avg, apply_
 
 
 def run_a_single_t_est_on_all_files_rouge_l(metrics, N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, epsilon_ngrams_count_and_hits, epsilon_avg_with_resampling):
-    results = run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit)
+    results = run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, tmp_folder='/Users/diego/Github/py-rouge/tests/tmp_rouge_l')
 
     all_asserts = []
     for test_folder in results.keys():
@@ -332,4 +360,42 @@ def run_a_single_t_est_on_all_files_rouge_l(metrics, N, alpha, apply_avg, apply_
                 python_score_val = round(python_scores[stat.lower()], 5)
                 comparison = compare_score(perl_score_val, python_score_val, epsilon_avg_with_resampling)
                 all_asserts.append((comparison, 'For ROUGE-L {}, Perl: {:.5f} Python: {:.5f}'.format(stat, perl_score_val, python_score_val) + ' Scores based on final ROUGE scores. ' + message))
+    return all_asserts
+
+
+def run_a_single_t_est_on_all_files_rouge_w(metrics, N, alpha, apply_avg, apply_best, length_limit, length_limit_type, limit_length, rouge_dir, stemming, weight_factor, epsilon_ngrams_count_and_hits, epsilon_avg_with_resampling):
+    results = run_a_single_t_est(rouge_dir, metrics, N, stemming, apply_avg, apply_best, alpha, limit_length, length_limit_type, length_limit, weight_factor, tmp_folder='/Users/diego/Github/py-rouge/tests/tmp_rouge_w')
+
+    all_asserts = []
+    for test_folder in results.keys():
+        for test_case in results[test_folder].keys():
+            message = 'test_folder:{}, test_case:{}'.format(test_folder, test_case)
+            # Compute scores based on output of ROUGE script for #n-grams hyp, ref and intersection
+            local_results = {'p': 0.0, 'r': 0.0, 'f': 0.0}
+            len_hyps = len(results[test_folder][test_case]['perl']['ngrams_count'])
+            for ngrams_counts in results[test_folder][test_case]['perl']['ngrams_count']:
+                evaluated_count = float(ngrams_counts['ROUGE-W']['peer'])
+                reference_count = float(ngrams_counts['ROUGE-W']['model'])
+                overlapping_count = float(ngrams_counts['ROUGE-W']['hit'])
+                score = rouge.Rouge._compute_p_r_f_score(evaluated_count, reference_count, overlapping_count, alpha=alpha, weight_factor=weight_factor)
+
+                for stat, val in score.items():
+                    local_results[stat] += round(val, 5)  # Perl script as only 5 digits
+
+            for stat in local_results.keys():
+                local_results[stat] /= len_hyps
+                perl_score_val = local_results[stat]
+                python_score_val = results[test_folder][test_case]['python']['scores']['rouge-w'][stat]
+                comparison = compare_score(perl_score_val, python_score_val, epsilon_ngrams_count_and_hits)
+                all_asserts.append((comparison, 'For ROUGE-W {}, Perl: {:.5f} Python: {:.5f}'.format(stat, perl_score_val, python_score_val) + ' Scores based on n-grams count & hit. ' + message))
+
+            # Compare real scores. As sampling is high, they should be more or less the same.
+            perl_scores = results[test_folder][test_case]['perl']['scores']['ROUGE-W']
+            python_scores = results[test_folder][test_case]['python']['scores']['rouge-w']
+
+            for stat in perl_scores.keys():
+                perl_score_val = round(perl_scores[stat]['val'], 5)
+                python_score_val = round(python_scores[stat.lower()], 5)
+                comparison = compare_score(perl_score_val, python_score_val, epsilon_avg_with_resampling)
+                all_asserts.append((comparison, 'For ROUGE-W {}, Perl: {:.5f} Python: {:.5f}'.format(stat, perl_score_val, python_score_val) + ' Scores based on final ROUGE scores. ' + message))
     return all_asserts
