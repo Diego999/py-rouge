@@ -643,7 +643,7 @@ class Rouge:
                         score = Rouge._compute_p_r_f_score(hypothesis_count, reference_count, overlapping_ngrams, self.alpha, self.weight_factor)
 
                         for stat in Rouge.STATS:
-                            scores[metric][sample_id][stat].append(score)
+                            scores[metric][sample_id][stat].append(score[stat])
 
         # Compute final score with the average or the the max
         if (self.apply_avg or self.apply_best) and len(all_hypothesis) > 1:
