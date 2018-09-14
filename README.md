@@ -7,10 +7,10 @@ A full Python implementation of the ROUGE metric, producing same results as in t
 - Finally, ROUGE-1.5.5. has a bug: should have $tmpTextLen += $sLen at line 2101. Here, the last sentence, $limitBytes is taken instead of $limitBytes-$tmpTextLen (as $tmpTextLen is never updated with bytes length limit). It has been fixed in this code. This bug does not have a consequence for the default evaluation `-b 665`.
 
 # Issues/Pull Requests/Feedbacks
-on't hesitate to contact for any feedback or create issues/pull requests (especially if you want to rewrite the stemmer implemented in ROUGE-1.5.5 in python ;)).
+Don't hesitate to contact for any feedback or create issues/pull requests (especially if you want to rewrite the stemmer implemented in ROUGE-1.5.5 in python ;)).
 
 # Example 
-```
+```python
 import rouge
 
 
