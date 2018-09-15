@@ -8,6 +8,22 @@ A full Python implementation of the ROUGE metric, producing same results as in t
 
 In case of doubts, please see all the implemented tests to compare outputs between the official ROUGE-1.5.5 and this script.
 
+## Installation
+
+Package is uploaded on `PyPI <https://pypi.org/project/py-rouge>`_.
+
+You can install it with pip:
+```shell
+pip install py-rouge
+```
+
+or do it manually:
+```shell
+git clone https://github.com/Diego999/py-rouge
+cd py-rouge
+python setup.py install
+```
+
 # Issues/Pull Requests/Feedbacks
 Don't hesitate to contact for any feedback or create issues/pull requests (especially if you want to rewrite the stemmer implemented in ROUGE-1.5.5 in python ;)).
 
