@@ -4,7 +4,7 @@ import re
 import itertools
 import collections
 import pkg_resources
-
+from io import open
 
 class Rouge:
     DEFAULT_METRICS = {"rouge-n"}
@@ -263,10 +263,10 @@ class Rouge:
         Returns:
           A dict with 'p', 'r' and 'f' as keys fore precision, recall, f1 score
         """
-        precision = 0.0 if evaluated_count == 0 else overlapping_count / evaluated_count
+        precision = 0.0 if evaluated_count == 0 else overlapping_count / float(evaluated_count)
         if weight_factor != 1.0:
             precision = precision ** (1.0 / weight_factor)
-        recall = 0.0 if reference_count == 0 else overlapping_count / reference_count
+        recall = 0.0 if reference_count == 0 else overlapping_count / float(reference_count)
         if weight_factor != 1.0:
             recall = recall ** (1.0 / weight_factor)
         f1_score = Rouge._compute_f_score(precision, recall, alpha)
@@ -470,19 +470,21 @@ class Rouge:
 
         if len(hypothesis) != len(references):
             raise ValueError("'hyps' and 'refs' do not have the same length")
-
         scores = {}
         has_rouge_n_metric = len([metric for metric in self.metrics if metric.split('-')[-1].isdigit()]) > 0
         if has_rouge_n_metric:
-            scores = {**scores, **self._get_scores_rouge_n(hypothesis, references)}
+            scores.update(self._get_scores_rouge_n(hypothesis, references))
+            # scores = {**scores, **self._get_scores_rouge_n(hypothesis, references)}
 
         has_rouge_l_metric = len([metric for metric in self.metrics if metric.split('-')[-1].lower() == 'l']) > 0
         if has_rouge_l_metric:
-            scores = {**scores, **self._get_scores_rouge_l_or_w(hypothesis, references, False)}
+            scores.update(self._get_scores_rouge_l_or_w(hypothesis, references, False))
+            # scores = {**scores, **self._get_scores_rouge_l_or_w(hypothesis, references, False)}
 
         has_rouge_w_metric = len([metric for metric in self.metrics if metric.split('-')[-1].lower() == 'w']) > 0
         if has_rouge_w_metric:
-            scores = {**scores, **self._get_scores_rouge_l_or_w(hypothesis, references, True)}
+            scores.update(self._get_scores_rouge_l_or_w(hypothesis, references, True))
+            # scores = {**scores, **self._get_scores_rouge_l_or_w(hypothesis, references, True)}
 
         return scores
 
