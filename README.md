@@ -32,8 +32,8 @@ Don't hesitate to contact for any feedback or create issues/pull requests (espec
 import rouge
 
 
-def prepare_results(p, r, f):
-    return '\t{}:\t{}: {:5.2f}\t{}: {:5.2f}\t{}: {:5.2f}'.format(metric, 'P', 100.0 * p, 'R', 100.0 * r, 'F1', 100.0 * f)
+def prepare_results(m, p, r, f):
+    return '\t{}:\t{}: {:5.2f}\t{}: {:5.2f}\t{}: {:5.2f}'.format(m, 'P', 100.0 * p, 'R', 100.0 * r, 'F1', 100.0 * f)
 
 
 for aggregator in ['Avg', 'Best', 'Individual']:
@@ -72,10 +72,10 @@ for aggregator in ['Avg', 'Best', 'Individual']:
                 nb_references = len(results_per_ref['p'])
                 for reference_id in range(nb_references):
                     print('\tHypothesis #{} & Reference #{}: '.format(hypothesis_id, reference_id))
-                    print('\t' + prepare_results(results_per_ref['p'][reference_id], results_per_ref['r'][reference_id], results_per_ref['f'][reference_id]))
+                    print('\t' + prepare_results(metric,results_per_ref['p'][reference_id], results_per_ref['r'][reference_id], results_per_ref['f'][reference_id]))
             print()
         else:
-            print(prepare_results(results['p'], results['r'], results['f']))
+            print(prepare_results(metric, results['p'], results['r'], results['f']))
     print()
 ```
 
