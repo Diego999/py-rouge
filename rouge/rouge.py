@@ -611,8 +611,7 @@ class Rouge:
                     total_reference_ngrams_count += reference_count
                     total_ngrams_overlapping_count += overlapping_ngrams
 
-                score = Rouge._compute_p_r_f_score(total_hypothesis_ngrams_count, total_reference_ngrams_count, total_ngrams_overlapping_count, self.alpha, self.weight_factor)
-
+                score = Rouge._compute_p_r_f_score(total_hypothesis_ngrams_count, total_reference_ngrams_count, total_ngrams_overlapping_count, self.alpha, self.weight_factor if use_w else 1.0)
                 for stat in Rouge.STATS:
                     scores[metric][stat] += score[stat]
             else:
@@ -622,7 +621,7 @@ class Rouge:
                     best_current_score_wlcs = None
                     for reference_sentences in references_sentences:
                         hypothesis_count, reference_count, overlapping_ngrams = Rouge._compute_ngrams_lcs(hypothesis_sentences, reference_sentences, self.weight_factor if use_w else 1.0)
-                        score = Rouge._compute_p_r_f_score(hypothesis_count, reference_count, overlapping_ngrams, self.alpha, self.weight_factor)
+                        score = Rouge._compute_p_r_f_score(total_hypothesis_ngrams_count, total_reference_ngrams_count, total_ngrams_overlapping_count, self.alpha, self.weight_factor if use_w else 1.0)
 
                         if use_w:
                             reference_count_for_score = reference_count ** (1.0 / self.weight_factor)
